@@ -1,0 +1,176 @@
+CREATE OR REPLACE FUNCTION get_student_details_with_subjects(student_id INT)
+RETURNS TABLE(id INT, name character varying, email character varying, address character varying, id INT, name character varying, code character varying, marks INT) 
+AS 
+$$
+BEGIN
+  RETURN QUERY
+  SELECT
+    s.id AS id, s.name, s.email, s.address,
+    su.id AS id, su.name AS name, su.code AS code, m.marks
+  FROM
+    students s
+    JOIN marks m ON m.studentId = s.id
+    JOIN subjects su ON su.id = m.subjectId
+  WHERE
+    s.id = student_id;
+END;
+$$ LANGUAGE plpgsql;
+
+select * from get_student_details_with_subjects(1);
+
+
+
+
+CREATE OR REPLACE FUNCTION get_student_data(student_id INTEGER)
+RETURNS TABLE (student_id INTEGER, name TEXT, email TEXT, phone TEXT, address TEXT, subject_id INTEGER, subject_name TEXT, subject_code TEXT, marks INTEGER) AS $$
+BEGIN
+RETURN QUERY
+  SELECT s.id AS student_id, s.name, s.email, s.phone, s.address, su.id AS subject_id, su.name AS subject_name, su.code AS subject_code, m.marks
+  FROM students s
+  JOIN marks m ON s.id = m.studentId
+  JOIN subjects su ON m.subjectId = su.id
+  WHERE s.id = student_id;
+END;
+$$ LANGUAGE plpgsql;
+
+
+
+-- FUNCTION: public.get_all_students(integer, integer, character varying, character varying)
+
+-- DROP FUNCTION IF EXISTS public.get_all_students(integer, integer, character varying, character varying);
+
+CREATE OR REPLACE FUNCTION public.get_all_students(
+	page_number integer,
+	page_limit integer,
+	search_string character varying,
+	orderBy character varying,
+  orderDirection character varying)
+
+    RETURNS TABLE(id integer, name character varying, email character varying, address character varying, phone character varying) 
+    LANGUAGE 'plpgsql'
+
+AS $BODY$
+DECLARE 
+query text;
+BEGIN
+  query := 'SELECT m.id, m.name,m.email, m.address,m.phone FROM students m';	
+  
+--   IF search_string IS NOT NULL THEN
+--     query := query || ' WHERE m.name ILIKE ''' || search_string || '%''';
+--   END IF;
+  
+  IF search_string IS NOT NULL THEN
+  query := query || ' WHERE (m.name ILIKE ''%' || search_string || '%'' OR m.address ILIKE ''%' || search_string || '%'' OR m.email ILIKE ''%' || search_string || '%'' m.phone ILIKE ''%' || search_string || '%'')';
+  END IF;
+
+  query := query || ' ORDER BY m.name ' || sort_type;
+  query := query || ' LIMIT ' || page_limit || ' OFFSET ' || (page_number - 1) * page_limit;
+	
+  RETURN QUERY
+  EXECUTE query;
+END;
+$BODY$;
+
+ALTER FUNCTION public.get_all_students(integer, integer, character varying, character varying)
+    OWNER TO postgres;
+
+
+
+
+-- FUNCTION: public.get_all_students(integer, integer, character varying, character varying)
+
+-- DROP FUNCTION IF EXISTS public.get_all_students(integer, integer, character varying, character varying);
+
+CREATE OR REPLACE FUNCTION public.get_all_students(
+	page_number integer,
+	page_limit integer,
+	search_string character varying,
+	order_by character varying,
+  order_direction character varying)
+    RETURNS TABLE(id integer, name character varying, address character varying) 
+    LANGUAGE 'plpgsql'
+
+AS $BODY$
+DECLARE 
+query text;
+BEGIN
+  query := 'SELECT m.id, m.name, m.address FROM students m';	
+  
+--   IF search_string IS NOT NULL THEN
+--     query := query || ' WHERE m.name ILIKE ''' || search_string || '%''';
+--   END IF;
+  
+  IF search_string IS NOT NULL THEN
+  query := query || ' WHERE (m.name ILIKE ''%' || search_string || '%'' OR m.address ILIKE ''%' || search_string || '%'')';
+  END IF;
+
+  IF order_by IS NOT NULL AND order_direction IS NOT NULL THEN
+    query := query || ' ORDER BY ' || order_by || ' ' || order_direction;
+  END IF;
+  query := query || ' LIMIT ' || page_limit || ' OFFSET ' || (page_number - 1) * page_limit;
+	
+  RETURN QUERY
+  EXECUTE query;
+END;
+$BODY$;
+
+ALTER FUNCTION public.get_all_students(integer, integer, character varying, character varying)
+    OWNER TO postgres;
+
+
+i have this output
+{
+  "studentDetails": {
+    "id": 1,
+    "name": "Rikesh",
+    "email": "rikesh@gmail.com",
+    "phone": "987655456",
+    "address": "kalanki",
+    "subjects": [
+      {
+        "id": 1,
+        "marks": 30,
+        "studentid": 1,
+        "subjectid": 2,
+        "subject": {
+          "id": 2,
+          "name": "MATH",
+          "code": "002"
+        }
+      },
+      {
+        "id": 2,
+        "marks": 30,
+        "studentid": 1,
+        "subjectid": 1,
+        "subject": {
+          "id": 1,
+          "name": "CA",
+          "code": "001"
+        }
+      }
+    ]
+  }
+}
+
+and i need above in to this
+
+{
+  "id": 1,
+    "name": "Rikesh",
+    "email": "rikesh@gmail.com",
+    "phone": "987655456",
+    "address": "kalanki",
+    "subjects": [{
+          "id": 1,
+          "name": "CA",
+          "code": "001"
+        },
+         {
+          "id": 2,
+          "name": "MATH",
+          "code": "002"
+        } 
+    ]
+
+}
