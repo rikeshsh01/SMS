@@ -180,6 +180,35 @@ const getMarksFn = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         res.status(501).send({ error: "Internal Server ERROR" });
     }
 });
+const addStudentDbFn = (s_name, s_email, s_phone, s_address) => __awaiter(void 0, void 0, void 0, function* () {
+    const stud = yield db.sequelize.query(`select * from add_student(:p_name,:p_email,:p_phone,:p_address)`, {
+        replacements: { p_name: s_name, p_email: s_email, p_phone: s_phone, p_address: s_address },
+        type: db.sequelize.QueryTypes.SELECT
+    });
+    // console.log(s_name)
+    return stud;
+});
+const addStudentFn = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { name, email, phone, address } = req.body;
+    const addStud = yield addStudentDbFn(name, email, phone, address);
+    console.log(addStud);
+    res.json(addStud);
+});
+const updateStudentDbFn = (s_id, s_name, s_email, s_phone, s_address) => __awaiter(void 0, void 0, void 0, function* () {
+    const stud = yield db.sequelize.query(`select * from update_student(:p_id,:p_name,:p_email,:p_phone,:p_address)`, {
+        replacements: { p_id: s_id, p_name: s_name, p_email: s_email, p_phone: s_phone, p_address: s_address },
+        type: db.sequelize.QueryTypes.SELECT
+    });
+    console.log(s_name);
+    return stud;
+});
+const updateStudentFn = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    let id = req.params.id;
+    const { name, email, phone, address } = req.body;
+    const updateStud = yield updateStudentDbFn(id, name, email, phone, address);
+    console.log(updateStud);
+    res.json(updateStud);
+});
 module.exports = {
-    createStudent, getAllStudent, updateStudent, deleteStudent, getStudentById, getStudentReport, sortSearchFilter, getMarksFn
+    createStudent, getAllStudent, updateStudent, deleteStudent, getStudentById, getStudentReport, sortSearchFilter, getMarksFn, addStudentFn, updateStudentFn
 };

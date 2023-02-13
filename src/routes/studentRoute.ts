@@ -25,4 +25,9 @@ router.get('/filter/',VerifyUser, StudentApiController.sortSearchFilter)
 
 router.get('/student/:id/marks',VerifyUser, StudentApiController.getMarksFn)
 
+router.post('/studentfn', StudentApiController.addStudentFn)
+
+router.put('/studentfn/:id', StudentApiController.updateStudentFn)
+
+
 module.exports = router 

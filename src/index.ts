@@ -16,10 +16,6 @@ app.use('/api/',require('./routes/subjectRoute'));
 app.use('/api/marks',require('./routes/marksRoute'));
 
 
-
-
-
-
 app.listen(port, () => {
     console.log(`Example app listening on port ${port}`)
 })
