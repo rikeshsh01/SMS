@@ -174,7 +174,14 @@ const getMarksFn = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     try {
         const stud_id = req.params.id;
         const getSubjectMarks = yield gettMarksDbFn(stud_id);
-        res.status(200).json(getSubjectMarks);
+        const subjectMarks = getSubjectMarks;
+        const output = subjectMarks.map(subject => {
+            const subjectName = subject.subject_name;
+            const marks = subject.marks;
+            return { [subjectName]: marks };
+        });
+        console.log(output);
+        res.status(200).json(output);
     }
     catch (error) {
         res.status(501).send({ error: "Internal Server ERROR" });

@@ -194,9 +194,9 @@ const sortSearchFilter = async (req: any, res: Response) => {
 
 
 
-const gettMarksDbFn = async (studId:number)=>{
+const gettMarksDbFn = async (studId: number) => {
     const marks = await db.sequelize.query(`SELECT * from public.get_student_marks(:id)`, {
-        replacements: { id: studId},
+        replacements: { id: studId },
         type: db.sequelize.QueryTypes.SELECT
     });
     // console.log(marks)
@@ -207,34 +207,48 @@ const getMarksFn = async (req: any, res: Response) => {
     try {
         const stud_id = req.params.id;
         const getSubjectMarks = await gettMarksDbFn(stud_id);
+        // console.log(getSubjectMarks)
 
-        res.status(200).json(getSubjectMarks)
+        interface SubjectMarks {
+            subject_name: string;
+            marks: number;
+        }
+        const subjectMarks: SubjectMarks[] = getSubjectMarks;
+
+        const output = subjectMarks.map(subject => {
+            const subjectName = subject.subject_name;
+            const marks = subject.marks;
+            return { [subjectName]: marks };
+        });
+
+console.log(output)
+        res.status(200).json(output)
 
     } catch (error) {
         res.status(501).send({ error: "Internal Server ERROR" })
     }
 }
 
-const addStudentDbFn = async (s_name:string, s_email:string,s_phone:string,s_address:string)=>{
+const addStudentDbFn = async (s_name: string, s_email: string, s_phone: string, s_address: string) => {
     const stud = await db.sequelize.query(`select * from add_student(:p_name,:p_email,:p_phone,:p_address)`, {
-        replacements: { p_name: s_name,p_email:s_email, p_phone:s_phone, p_address:s_address},
+        replacements: { p_name: s_name, p_email: s_email, p_phone: s_phone, p_address: s_address },
         type: db.sequelize.QueryTypes.SELECT
     });
     // console.log(s_name)
     return stud;
 }
 
-const addStudentFn = async (req: any, res: Response)=>{
-    const {name,email,phone,address} =req.body;
+const addStudentFn = async (req: any, res: Response) => {
+    const { name, email, phone, address } = req.body;
 
-    const addStud = await addStudentDbFn(name,email,phone,address);
+    const addStud = await addStudentDbFn(name, email, phone, address);
     console.log(addStud)
     res.json(addStud)
 }
 
-const updateStudentDbFn = async (s_id:number,s_name:string, s_email:string,s_phone:string,s_address:string)=>{
+const updateStudentDbFn = async (s_id: number, s_name: string, s_email: string, s_phone: string, s_address: string) => {
     const stud = await db.sequelize.query(`select * from update_student(:p_id,:p_name,:p_email,:p_phone,:p_address)`, {
-        replacements: { p_id: s_id, p_name: s_name,p_email:s_email, p_phone:s_phone, p_address:s_address},
+        replacements: { p_id: s_id, p_name: s_name, p_email: s_email, p_phone: s_phone, p_address: s_address },
         type: db.sequelize.QueryTypes.SELECT
     });
     console.log(s_name)
@@ -242,11 +256,11 @@ const updateStudentDbFn = async (s_id:number,s_name:string, s_email:string,s_pho
 }
 
 
-const updateStudentFn = async (req: any, res: Response)=>{
+const updateStudentFn = async (req: any, res: Response) => {
     let id = req.params.id;
-    const {name,email,phone,address} =req.body;
+    const { name, email, phone, address } = req.body;
 
-    const updateStud = await updateStudentDbFn(id,name,email,phone,address);
+    const updateStud = await updateStudentDbFn(id, name, email, phone, address);
     console.log(updateStud)
     res.json(updateStud)
 }
@@ -254,5 +268,5 @@ const updateStudentFn = async (req: any, res: Response)=>{
 
 
 module.exports = {
-    createStudent, getAllStudent, updateStudent, deleteStudent, getStudentById, getStudentReport, sortSearchFilter,getMarksFn,addStudentFn,updateStudentFn
+    createStudent, getAllStudent, updateStudent, deleteStudent, getStudentById, getStudentReport, sortSearchFilter, getMarksFn, addStudentFn, updateStudentFn
 }
