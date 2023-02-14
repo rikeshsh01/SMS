@@ -174,3 +174,33 @@ and i need above in to this
     ]
 
 }
+
+
+
+CREATE OR REPLACE FUNCTION public.get_join_user_data(
+	p_token character varying)
+    RETURNS TABLE(user_id integer, user_name character varying, user_email character varying, login_link_id integer, login_link_token character varying, login_link_userId integer) 
+    LANGUAGE 'plpgsql'
+    COST 100
+    VOLATILE PARALLEL UNSAFE
+    ROWS 1000
+
+AS $BODY$
+BEGIN
+RETURN QUERY
+  SELECT u.id AS user_id, s.name, s.email, lu.id AS login_link_id, lu.token AS login_link_token, lu.userId AS login_link_userId
+  FROM users u
+  JOIN users u ON lu.id = u.login_link_token
+  WHERE login_link_token = p_token;
+END;
+$BODY$;
+
+ALTER FUNCTION public.get_student_data(integer)
+    OWNER TO postgres;
+
+
+    i have 2 tables
+    users table has column id, name email.
+    login_links table hase id, token, userId.
+
+    i need a database function in postgresql which returns the table containing user_id, user_name, user_email, login_link_id, login_link_token,login_link_userId

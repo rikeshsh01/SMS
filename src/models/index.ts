@@ -29,7 +29,7 @@ db.student = require('./student')(DataTypes, sequelize)
 db.user = require('./user')(DataTypes, sequelize)
 db.subject = require('./subject')(DataTypes, sequelize)
 db.mark = require('./marks')(DataTypes, sequelize)
-
+db.loginlink = require('./login_link')(DataTypes, sequelize)
 
 // Database relationship 
 db.student.hasMany(db.mark, { as: 'subjects', foreignKey: 'studentid' });
@@ -38,6 +38,8 @@ db.mark.belongsTo(db.student, { foreignKey: 'studentid' });
 db.subject.hasMany(db.mark, { as: 'subjects', foreignKey: 'subjectid' });
 db.mark.belongsTo(db.subject, { foreignKey: 'subjectid' });
 
+db.user.hasOne(db.loginlink, { foreignKey: 'userid' }); // A HasOne B
+db.loginlink.belongsTo(db.user,{ foreignKey: 'userid' }); // A BelongsTo B
 
 // db.student.belongsToMany(db.subject, { through: 'student_subjects' });
 // db.subject.belongsToMany(db.student, { through: 'student_subjects' });
@@ -48,9 +50,7 @@ db.mark.belongsTo(db.subject, { foreignKey: 'subjectid' });
 
 // db.subject.hasMany(db.mark, { as: 'marks' });
 // db.mark.belongsTo(db.subject);
- 
 
-
-// db.sequelize.sync({force:true});
+// db.sequelize.sync({force:true}); 
 
 module.exports = db;

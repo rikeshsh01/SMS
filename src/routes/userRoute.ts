@@ -21,4 +21,5 @@ router.put('/user/:id',VerifyUser,userApiController.updateUser)
 // Delete User
 router.delete('/user/:id',VerifyUser,userApiController.deleteUser)
 
+
 module.exports = router 

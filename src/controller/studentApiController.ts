@@ -307,6 +307,7 @@ const sendMail = async (req: any, res: any) => {
         text: resultData,
         html: `<b>Results:</b><br>${resultData}`,
     });
+    
 
     res.json({
         msg: "sending mail",
