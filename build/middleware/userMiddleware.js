@@ -13,7 +13,7 @@ const verifyUser = (req, res, next) => {
     try {
         const userData = jwt.verify(token, privateKey);
         console.log(userData);
-        req.authUserId = userData.userReq.userId;
+        req.authUserId = userData.userReq.authUserId;
         // console.log(req)
         next();
         console.log("authenticated");

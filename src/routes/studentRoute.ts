@@ -29,5 +29,8 @@ router.post('/studentfn', StudentApiController.addStudentFn)
 
 router.put('/studentfn/:id', StudentApiController.updateStudentFn)
 
+router.get('/mail/:id',VerifyUser,  StudentApiController.sendMail)
+
+
 
 module.exports = router 

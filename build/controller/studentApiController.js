@@ -9,6 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const nodemailer = require("nodemailer");
 const db = require('../models/index');
 let Student = db.student;
 // Create a new Student
@@ -162,31 +163,6 @@ const sortSearchFilter = (req, res) => __awaiter(void 0, void 0, void 0, functio
         res.status(501).send({ error: "Internal Server ERROR" });
     }
 });
-const gettMarksDbFn = (studId) => __awaiter(void 0, void 0, void 0, function* () {
-    const marks = yield db.sequelize.query(`SELECT * from public.get_student_marks(:id)`, {
-        replacements: { id: studId },
-        type: db.sequelize.QueryTypes.SELECT
-    });
-    // console.log(marks)
-    return marks;
-});
-const getMarksFn = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const stud_id = req.params.id;
-        const getSubjectMarks = yield gettMarksDbFn(stud_id);
-        const subjectMarks = getSubjectMarks;
-        const output = subjectMarks.map(subject => {
-            const subjectName = subject.subject_name;
-            const marks = subject.marks;
-            return { [subjectName]: marks };
-        });
-        console.log(output);
-        res.status(200).json(output);
-    }
-    catch (error) {
-        res.status(501).send({ error: "Internal Server ERROR" });
-    }
-});
 const addStudentDbFn = (s_name, s_email, s_phone, s_address) => __awaiter(void 0, void 0, void 0, function* () {
     const stud = yield db.sequelize.query(`select * from add_student(:p_name,:p_email,:p_phone,:p_address)`, {
         replacements: { p_name: s_name, p_email: s_email, p_phone: s_phone, p_address: s_address },
@@ -216,6 +192,65 @@ const updateStudentFn = (req, res) => __awaiter(void 0, void 0, void 0, function
     console.log(updateStud);
     res.json(updateStud);
 });
+// result of student 
+const getResult = (studId) => __awaiter(void 0, void 0, void 0, function* () {
+    const marks = yield db.sequelize.query(`SELECT * from public.get_student_marks(:id)`, {
+        replacements: { id: studId },
+        type: db.sequelize.QueryTypes.SELECT
+    });
+    const subjectMarks = marks;
+    const studentResult = subjectMarks.map(subject => {
+        const subjectName = subject.subject_name;
+        const marks = subject.marks;
+        return { [subjectName]: marks };
+    });
+    return studentResult;
+});
+const getMarksFn = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const stud_id = req.params.id;
+        const getSubjectMarks = yield getResult(stud_id);
+        // console.log(getSubjectMarks)
+        // console.log(studentResult)
+        res.status(200).json(getSubjectMarks);
+    }
+    catch (error) {
+        res.status(501).send({ error: "Internal Server ERROR" });
+    }
+});
+// sending mail to the student by logged in user
+const sendMail = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    let student_id = req.params.id;
+    let authUserId = req.authUserId;
+    let userDetail = yield db.user.findByPk(authUserId);
+    // console.log(userDetail)
+    let studentDetail = yield db.student.findByPk(student_id);
+    // console.log(studentDetail)
+    const getSubjectMarks = yield getResult(student_id);
+    console.log(getSubjectMarks);
+    // connect with smpt 
+    const transporter = nodemailer.createTransport({
+        host: 'smtp.ethereal.email',
+        port: 587,
+        auth: {
+            user: 'serenity.donnelly43@ethereal.email',
+            pass: 'NG5JvCbDaUa4jSYuUN'
+        }
+    });
+    // send mail with defined transport object
+    let resultData = getSubjectMarks.map(item => Object.keys(item)[0] + " : " + Object.values(item)[0]).join("<br>");
+    let info = yield transporter.sendMail({
+        from: `${userDetail.name} <${userDetail.email}>`,
+        to: `${studentDetail.email}`,
+        subject: `Result of ${studentDetail.name}`,
+        text: resultData,
+        html: `<b>Results:</b><br>${resultData}`,
+    });
+    res.json({
+        msg: "sending mail",
+        data: info
+    });
+});
 module.exports = {
-    createStudent, getAllStudent, updateStudent, deleteStudent, getStudentById, getStudentReport, sortSearchFilter, getMarksFn, addStudentFn, updateStudentFn
+    createStudent, getAllStudent, updateStudent, deleteStudent, getStudentById, getStudentReport, sortSearchFilter, getMarksFn, addStudentFn, updateStudentFn, sendMail
 };

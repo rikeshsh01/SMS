@@ -1,4 +1,5 @@
 import { Response, Request } from "express";
+const nodemailer = require("nodemailer");
 
 const db = require('../models/index')
 let Student = db.student;
@@ -192,43 +193,6 @@ const sortSearchFilter = async (req: any, res: Response) => {
     }
 }
 
-
-
-const gettMarksDbFn = async (studId: number) => {
-    const marks = await db.sequelize.query(`SELECT * from public.get_student_marks(:id)`, {
-        replacements: { id: studId },
-        type: db.sequelize.QueryTypes.SELECT
-    });
-    // console.log(marks)
-    return marks;
-}
-
-const getMarksFn = async (req: any, res: Response) => {
-    try {
-        const stud_id = req.params.id;
-        const getSubjectMarks = await gettMarksDbFn(stud_id);
-        // console.log(getSubjectMarks)
-
-        interface SubjectMarks {
-            subject_name: string;
-            marks: number;
-        }
-        const subjectMarks: SubjectMarks[] = getSubjectMarks;
-
-        const output = subjectMarks.map(subject => {
-            const subjectName = subject.subject_name;
-            const marks = subject.marks;
-            return { [subjectName]: marks };
-        });
-
-console.log(output)
-        res.status(200).json(output)
-
-    } catch (error) {
-        res.status(501).send({ error: "Internal Server ERROR" })
-    }
-}
-
 const addStudentDbFn = async (s_name: string, s_email: string, s_phone: string, s_address: string) => {
     const stud = await db.sequelize.query(`select * from add_student(:p_name,:p_email,:p_phone,:p_address)`, {
         replacements: { p_name: s_name, p_email: s_email, p_phone: s_phone, p_address: s_address },
@@ -267,6 +231,91 @@ const updateStudentFn = async (req: any, res: Response) => {
 
 
 
+
+// result of student 
+
+const getResult = async (studId: number) => {
+    const marks = await db.sequelize.query(`SELECT * from public.get_student_marks(:id)`, {
+        replacements: { id: studId },
+        type: db.sequelize.QueryTypes.SELECT
+    });
+
+    interface SubjectMarks {
+        subject_name: string;
+        marks: number;
+    }
+    const subjectMarks: SubjectMarks[] = marks;
+
+    const studentResult = subjectMarks.map(subject => {
+        const subjectName = subject.subject_name;
+        const marks = subject.marks;
+        return { [subjectName]: marks };
+    });
+
+    return studentResult;
+}
+
+const getMarksFn = async (req: any, res: Response) => {
+    try {
+        const stud_id = req.params.id;
+        const getSubjectMarks = await getResult(stud_id);
+        // console.log(getSubjectMarks)
+
+        // console.log(studentResult)
+        res.status(200).json(getSubjectMarks)
+
+    } catch (error) {
+        res.status(501).send({ error: "Internal Server ERROR" })
+    }
+}
+
+
+
+
+// sending mail to the student by logged in user
+const sendMail = async (req: any, res: any) => {
+
+    let student_id = req.params.id;
+    let authUserId = req.authUserId;
+
+    let userDetail = await db.user.findByPk(authUserId);
+    // console.log(userDetail)
+
+    let studentDetail = await db.student.findByPk(student_id);
+    // console.log(studentDetail)
+
+    const getSubjectMarks = await getResult(student_id);
+
+    console.log(getSubjectMarks)
+    // connect with smpt 
+    const transporter = nodemailer.createTransport({
+        host: 'smtp.ethereal.email',
+        port: 587,
+        auth: {
+            user: 'serenity.donnelly43@ethereal.email',
+            pass: 'NG5JvCbDaUa4jSYuUN'
+        }
+    });
+
+
+    // send mail with defined transport object
+    let resultData = getSubjectMarks.map(item => Object.keys(item)[0] + " : " + Object.values(item)[0]).join("<br>");
+    let info = await transporter.sendMail({
+        from: `${userDetail.name} <${userDetail.email}>`,
+        to: `${studentDetail.email}`,
+        subject: `Result of ${studentDetail.name}`,
+        text: resultData,
+        html: `<b>Results:</b><br>${resultData}`,
+    });
+
+    res.json({
+        msg: "sending mail",
+        data: info
+    })
+}
+
+
+
 module.exports = {
-    createStudent, getAllStudent, updateStudent, deleteStudent, getStudentById, getStudentReport, sortSearchFilter, getMarksFn, addStudentFn, updateStudentFn
+    createStudent, getAllStudent, updateStudent, deleteStudent, getStudentById, getStudentReport, sortSearchFilter, getMarksFn, addStudentFn, updateStudentFn, sendMail
 }

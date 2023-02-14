@@ -17,7 +17,7 @@ const verifyUser = (req: any, res: any, next: any) => {
     console.log(userData);
 
 
-    req.authUserId = userData.userReq.userId;
+    req.authUserId = userData.userReq.authUserId;
     // console.log(req)
 
     next();
