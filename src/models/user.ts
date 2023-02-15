@@ -1,5 +1,10 @@
-module.exports = (DataTypes: any, sequelize: any, Sequelize:any) => {
+module.exports = (DataTypes: any, sequelize: any, Sequelize: any) => {
   const User = sequelize.define('user', {
+
+    uuid: {
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
+    },
     name: {
       type: DataTypes.STRING,
       allowNull: true,
@@ -7,7 +12,7 @@ module.exports = (DataTypes: any, sequelize: any, Sequelize:any) => {
     email: {
       type: DataTypes.STRING,
       allowNull: false,
-      unique:true,
+      unique: true,
       validate: {
         notEmpty: true,
         isEmail: true,

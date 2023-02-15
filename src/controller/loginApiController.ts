@@ -2,122 +2,143 @@ const DB = require('../models/index');
 const moment = require('moment');
 const nodemailer = require("nodemailer");
 
-const login = async (req: any, res: any) => {
-    const token = Math.floor(100000 + Math.random() * 900000)
+
+
+
+
+const sendToEmail = async (req: any, res: any) => {
+    let email = req.body.email
+    const token = Math.random().toString(36).substring(2);
+
 
     const user = await DB.user.findOne({
         where: {
-            email: req.body.email
-        }
+            email: email
+        },
+        include: [DB.loginlink],
     });
 
-    if (user == null) {
-        const user = await DB.user.create({
-            email: req.body.email
-        });
+    // res.json(user)
 
-        await DB.loginlink.create({
-            token: token,
-            userid: user.id
-        })
-        res.status(200).json(user)
-    } else {
-        const checkUserId = await DB.loginlink.findOne({
-            where: {
-                userid: user.id
-            }
-        })
-        if (checkUserId) {
-            await DB.loginlink.update({
-                token: token,
-                timestamp: moment()
-            }, {
-                where: {
-                    userid: user.id
-                }
-            });
-            res.json({
-                msg: "updated"
-            })
-        } else {
-            await DB.loginlink.create({
-                token: token,
-                userid: user.id
-            })
-            res.json({
-                msg: "updated"
-            })
-        }
 
+    if (!user) {
+        res.json({
+            msg: "User does not exits"
+        })
     }
+    const loginlink = await DB.loginlink.create({
+        token: token
+    })
+
+    const userloginlink = await DB.userloginlink.create({
+        userid: user.id,
+        loginlinkid: loginlink.id
+    })
+
+
+
 
     const transporter = nodemailer.createTransport({
         host: 'smtp.ethereal.email',
         port: 587,
         auth: {
-            user: 'ransom.mcdermott@ethereal.email',
-            pass: 'vnRhjERT2se1BPcHj7'
+            user: 'cullen79@ethereal.email',
+            pass: 'XCUhzqWZkBNuFpKP9t'
         }
     });
 
     await transporter.sendMail({
         from: "admin@gmail.com",
-        to: req.body.email,
+        to: email,
         subject: 'Verify Your Account',
         text: `Please click on this link to verify : http://localhost:5000/api/login/emailauthentication/${token}`,
     });
-
-}
-
-const verifyTokenDbfn = async (token: string) => {
-    const tokens = await DB.sequelize.query(`SELECT * from public.get_joined_user_data(:token)`, {
-        replacements: { token: token },
-        type: DB.sequelize.QueryTypes.SELECT
-    });
-    return tokens;
+    res.status(201).json({
+        user, loginlink, userloginlink
+    })
 }
 
 
 const verifyEmailLink = async (req: any, res: any) => {
-    const validTime = moment().subtract(60, 'seconds');
-    // console.log(twentyFourHoursAgo.toDate(),'10 sec')
-    // console.log(moment().toDate(),'Momment')
 
-    const vToken = await verifyTokenDbfn(req.params.token)
+    let token = req.params.token
+    const vToken = await DB.loginlink.findOne({
+        where: {
+            token: token,
+            used: {
+                [DB.Sequelize.Op.eq]: false,
+            },
+        },
+        include: [
+            {
+                model: DB.user,
+                attributes: ['id', 'uuid', 'name', 'email'],
+            },
+        ],
+    });
 
-    if (vToken[0].login_link_token == (req.params.token) && vToken[0].login_link_timestamp >= validTime) {
-        res.status(201).json({
-            msg: "token is valid"
-        })
+    if (!vToken) {
+        return res.status(404).json({ message: 'Invalid token' });
     }
-    else {
-        res.json({
-            msg: "token is invalid"
-        })
+
+    let [user] = vToken.users
+
+    await DB.logininfo.create({
+        logindate: moment(),
+        userid: user.id
+    })
+
+    res.status(200).json({
+        message: 'Email address verified successfully',
+        authToken: vToken.uuid,
+    });
+
+}
+
+const logOut = async (req: any, res: any) => {
+    const auth_token = req.header("auth-token")
+    // console.log(token)
+
+    const loginLink = await DB.loginlink.findOne({
+        where: {
+            uuid: auth_token,
+            used: {
+                [DB.Sequelize.Op.eq]: false,
+            },
+        },
+        include: [
+            {
+                model: DB.user,
+                attributes: ['id', 'uuid', 'name', 'email'],
+            },
+        ],
+    });
+
+
+
+    if (!loginLink) {
+        return res.status(404).send({ message: 'Login link not found' });
     }
+    loginLink.used = true;
+    loginLink.token = null;
+    await loginLink.save();
 
-    /*
-        const vToken = await DB.loginlink.findOne({
-            where: {
-                token: req.params.token,
-                timestamp: {
-                    [DB.Sequelize.Op.gte]: validTime.toDate(), // Check if timestamp is greater than or equal to 60 second
-                }
-            }
-        })
-
-        if (vToken) {
-            res.status(201).json({
-                msg: "token is valid"
-            })
-        } else {
-            res.json({
-                msg: "token is invalid"
-            })
+    let [user]=loginLink.users
+    
+    await DB.logininfo.update({
+        logoutdate: moment()
+    }, {
+        where: {
+            userid: user.id
         }
-        */
+    });
+
+    res.status(200).send({ 
+        message: 'Logout successful' ,
+        loginLink:loginLink
+    });
 }
 
 module.exports = {
-    login, verifyEmailLink
+    sendToEmail, verifyEmailLink, logOut
 }

@@ -1,6 +1,6 @@
 "use strict";
-module.exports = (DataTypes, sequelize) => {
-    const Mark = sequelize.define('mark', {
+module.exports = (DataTypes, sequelize, Sequelize) => {
+    const UserLoginLink = sequelize.define('userloginlink', {
         id: {
             type: DataTypes.INTEGER,
             primaryKey: true,
@@ -8,14 +8,10 @@ module.exports = (DataTypes, sequelize) => {
         },
         uuid: {
             type: DataTypes.UUID,
-            defaultValue: DataTypes.UUIDV4,
-        },
-        marks: {
-            type: DataTypes.INTEGER,
-            allowNull: false
+            defaultValue: DataTypes.UUIDV4
         }
     }, {
         timestamps: false
     });
-    return Mark;
+    return UserLoginLink;
 };

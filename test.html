@@ -204,3 +204,12 @@ ALTER FUNCTION public.get_student_data(integer)
     login_links table hase id, token, userId.
 
     i need a database function in postgresql which returns the table containing user_id, user_name, user_email, login_link_id, login_link_token,login_link_userId
+
+
+    i have user table which has column id, name, email, password.
+
+    i need to create another table associate with user table which should have column id,uuid,logindate,logoutdate to store
+    the login and logout date when user login and log out. 
+
+    after that we need to create api to authenticate user by using the newly created table data
+

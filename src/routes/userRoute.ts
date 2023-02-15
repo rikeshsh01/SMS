@@ -9,9 +9,6 @@ var router = require("express").Router();
 // Create a new User
 router.post("/user", userApiController.createUser); 
 
-// Auth User
-router.post('/login',userApiController.authUser)
-
 // Read all User 
 router.get('/user/',VerifyUser, userApiController.getAllUser)
 

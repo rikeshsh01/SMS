@@ -1,12 +1,9 @@
 import { Response, Request } from "express";
 var bcrypt = require('bcrypt');
-var jwt = require('jsonwebtoken');
 
 const db = require('../models/index')
 let User = db.user;
 
-
-var privateKey = "MynameisRicky";
 
 // Create a new User
 const createUser = async (req: any, res: Response) => {
@@ -19,6 +16,17 @@ const createUser = async (req: any, res: Response) => {
                 password: secPass,
                 name: req.body.name
             });
+            console.log(user)
+
+            const loginlink = await db.loginlink.create({
+                token:null
+            })
+            console.log(loginlink)
+
+            await db.userloginlink.create({
+                userid:user.id,
+                loginlinkid:loginlink.id
+            })
             res.status(200).json({
                 message: "User Created",
                 dataUser: {user}
@@ -30,45 +38,6 @@ const createUser = async (req: any, res: Response) => {
     }
 }
 
-
-
-// User Login / Auth
-const authUser = async (req: any, res: Response) => {
-    try {
-        const { email, password } = req.body;
-
-        let userDB = await User.findOne({ where: { email: email } });
-
-        if (!userDB) {
-            return res.status(400).json({ error: "User Doesnot exist" });
-        }
-
-        const passwordCOmpare = await bcrypt.compare(password, userDB.password);
-
-        if (!passwordCOmpare) {
-            return res.status(400).json({ error: "Password doesnot matched" });
-        }
-
-        const data = {
-            userReq: {
-                authUserId: userDB.id
-            }
-        }
-
-        const authToken = jwt.sign(data, privateKey);
-
-        req.authToken = authToken;
-        res.status(200).json({
-            auth_token: authToken,
-            data: data
-        });
-
-    } catch (error: any) {
-        console.log(error.message);
-        res.status(500).send("Internal Server Error");
-
-    }
-}
 
 
 
@@ -146,5 +115,5 @@ const deleteUser = async (req: any, res: Response) => {
 }
 
 module.exports = {
-    createUser, getAllUser, updateUser, deleteUser, authUser,
+    createUser, getAllUser, updateUser, deleteUser
 }

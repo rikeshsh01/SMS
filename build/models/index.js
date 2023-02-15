@@ -25,18 +25,20 @@ db.user = require('./user')(DataTypes, sequelize);
 db.subject = require('./subject')(DataTypes, sequelize);
 db.mark = require('./marks')(DataTypes, sequelize);
 db.loginlink = require('./login_link')(DataTypes, sequelize);
+db.logininfo = require('./login_info')(DataTypes, sequelize);
+db.userloginlink = require('./userloginlink')(DataTypes, sequelize);
 // Database relationship 
 db.student.hasMany(db.mark, { as: 'subjects', foreignKey: 'studentid' });
 db.mark.belongsTo(db.student, { foreignKey: 'studentid' });
 db.subject.hasMany(db.mark, { as: 'subjects', foreignKey: 'subjectid' });
 db.mark.belongsTo(db.subject, { foreignKey: 'subjectid' });
-db.user.hasOne(db.loginlink, { foreignKey: 'userid' }); // A HasOne B
-db.loginlink.belongsTo(db.user, { foreignKey: 'userid' }); // A BelongsTo B
-// db.student.belongsToMany(db.subject, { through: 'student_subjects' });
-// db.subject.belongsToMany(db.student, { through: 'student_subjects' });
-// db.student.hasMany(db.mark, { as: 'marks' });
-// db.mark.belongsTo(db.student);
-// db.subject.hasMany(db.mark, { as: 'marks' });
-// db.mark.belongsTo(db.subject);
-// db.sequelize.sync({force:true}); 
+// db.user.hasMany(db.loginlink, { foreignKey: 'userid' }); // A HasOne B
+// db.loginlink.belongsTo(db.user,{ foreignKey: 'userid' }); // A BelongsTo B
+db.logininfo.belongsTo(db.user, { foreignKey: 'userid' });
+db.user.hasMany(db.logininfo, { foreignKey: 'userid' });
+// db.loginlink.hasOne(db.logininfo, { foreignKey: 'loginlinkid' });
+// db.logininfo.belongsTo(db.loginlink, { foreignKey: 'loginlinkid'});
+db.user.belongsToMany(db.loginlink, { through: db.userloginlink, foreignKey: 'userid' });
+db.loginlink.belongsToMany(db.user, { through: db.userloginlink, foreignKey: 'loginlinkid' });
+// db.sequelize.sync({force:true});
 module.exports = db;

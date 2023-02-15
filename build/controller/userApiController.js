@@ -10,10 +10,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var bcrypt = require('bcrypt');
-var jwt = require('jsonwebtoken');
 const db = require('../models/index');
 let User = db.user;
-var privateKey = "MynameisRicky";
 // Create a new User
 const createUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
@@ -24,38 +22,18 @@ const createUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             password: secPass,
             name: req.body.name
         });
+        console.log(user);
+        const loginlink = yield db.loginlink.create({
+            token: null
+        });
+        console.log(loginlink);
+        yield db.userloginlink.create({
+            userid: user.id,
+            loginlinkid: loginlink.id
+        });
         res.status(200).json({
             message: "User Created",
             dataUser: { user }
-        });
-    }
-    catch (error) {
-        console.log(error.message);
-        res.status(500).send("Internal Server Error");
-    }
-});
-// User Login / Auth
-const authUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const { email, password } = req.body;
-        let userDB = yield User.findOne({ where: { email: email } });
-        if (!userDB) {
-            return res.status(400).json({ error: "User Doesnot exist" });
-        }
-        const passwordCOmpare = yield bcrypt.compare(password, userDB.password);
-        if (!passwordCOmpare) {
-            return res.status(400).json({ error: "Password doesnot matched" });
-        }
-        const data = {
-            userReq: {
-                authUserId: userDB.id
-            }
-        };
-        const authToken = jwt.sign(data, privateKey);
-        req.authToken = authToken;
-        res.status(200).json({
-            auth_token: authToken,
-            data: data
         });
     }
     catch (error) {
@@ -121,5 +99,5 @@ const deleteUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     }
 });
 module.exports = {
-    createUser, getAllUser, updateUser, deleteUser, authUser,
+    createUser, getAllUser, updateUser, deleteUser
 };
