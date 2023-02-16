@@ -2,6 +2,7 @@ const DB = require('../models/index');
 const moment = require('moment');
 const nodemailer = require("nodemailer");
 
+
 const sendToEmail = async (req: any, res: any) => {
     let email = req.body.email
     const token = Math.random().toString(36).substring(2);
