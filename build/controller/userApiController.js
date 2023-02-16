@@ -22,15 +22,6 @@ const createUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             password: secPass,
             name: req.body.name
         });
-        console.log(user);
-        const loginlink = yield db.loginlink.create({
-            token: null
-        });
-        console.log(loginlink);
-        yield db.userloginlink.create({
-            userid: user.id,
-            loginlinkid: loginlink.id
-        });
         res.status(200).json({
             message: "User Created",
             dataUser: { user }

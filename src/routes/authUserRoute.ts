@@ -10,9 +10,4 @@ var router = require("express").Router();
 router.post('/login/jwt',authUserApiController.authUserJWT)
 
 
-// Auth User with jwt
-router.post('/login/nojwt',authUserApiController.authUserNoJWT)
-
-
-
 module.exports = router 

@@ -2,10 +2,6 @@ const DB = require('../models/index');
 const moment = require('moment');
 const nodemailer = require("nodemailer");
 
-
-
-
-
 const sendToEmail = async (req: any, res: any) => {
     let email = req.body.email
     const token = Math.random().toString(36).substring(2);
@@ -34,8 +30,6 @@ const sendToEmail = async (req: any, res: any) => {
         userid: user.id,
         loginlinkid: loginlink.id
     })
-
-
 
 
     const transporter = nodemailer.createTransport({
@@ -81,13 +75,18 @@ const verifyEmailLink = async (req: any, res: any) => {
         return res.status(404).json({ message: 'Invalid token' });
     }
 
+    vToken.used = true;
+    vToken.token = null;
+    await vToken.save();
+
     let [user] = vToken.users
 
     await DB.logininfo.create({
         logindate: moment(),
-        userid: user.id
+        userid: user.id,
+        usersession:vToken.uuid
     })
-
+    
     res.status(200).json({
         message: 'Email address verified successfully',
         authToken: vToken.uuid,
@@ -96,46 +95,19 @@ const verifyEmailLink = async (req: any, res: any) => {
 }
 
 const logOut = async (req: any, res: any) => {
-    const auth_token = req.header("auth-token")
-    // console.log(token)
-
-    const loginLink = await DB.loginlink.findOne({
-        where: {
-            uuid: auth_token,
-            used: {
-                [DB.Sequelize.Op.eq]: false,
-            },
-        },
-        include: [
-            {
-                model: DB.user,
-                attributes: ['id', 'uuid', 'name', 'email'],
-            },
-        ],
-    });
-
-
-
-    if (!loginLink) {
-        return res.status(404).send({ message: 'Login link not found' });
-    }
-    loginLink.used = true;
-    loginLink.token = null;
-    await loginLink.save();
-
-    let [user]=loginLink.users
     
     await DB.logininfo.update({
-        logoutdate: moment()
+        logoutdate: moment(),
+        usersession:null
     }, {
         where: {
-            userid: user.id
+            userid: req.userId,
+            uuid:req.logininfoUuid
         }
     });
 
     res.status(200).send({ 
-        message: 'Logout successful' ,
-        loginLink:loginLink
+        message: 'Logout successful'
     });
 }
 

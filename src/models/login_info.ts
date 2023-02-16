@@ -16,6 +16,11 @@ module.exports = (DataTypes: any, sequelize: any, Sequelize: any) => {
         logoutdate: {
             type: DataTypes.DATE,
             allowNull: true
+        },
+        usersession:{
+            type:DataTypes.STRING,
+            allowNull: true,
+            defaultValue:null,
         }
     }, {
         timestamps: false

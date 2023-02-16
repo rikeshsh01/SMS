@@ -46,45 +46,9 @@ const authUserJWT = async (req: any, res: Response) => {
 }
 
 
-// authentication without jwt 
-const authUserNoJWT = async (req: any, res: Response) => {
-    try {
-        const { email, password } = req.body;
-
-        let userDB = await User.findOne({ where: { email: email } });
-
-        // res.json(userDB)
-
-        if (!userDB) {
-            return res.status(400).json({ error: "User Doesnot exist" });
-        }
-
-        const passwordCOmpare = await bcrypt.compare(password, userDB.password);
-
-        if (!passwordCOmpare) {
-            return res.status(400).json({ error: "Password doesnot matched" });
-        }
-
-        const logininfo = await db.logininfo.create({
-            logindate:moment(),
-            userid:userDB.id
-        })
-
-        res.json(logininfo)
-
-
-
-    } catch (error: any) {
-        console.log(error.message);
-        res.status(500).send("Internal Server Error");
-
-    }
-}
-
-
 
 
 
 module.exports = {
-    authUserJWT, authUserNoJWT
+    authUserJWT,
 }

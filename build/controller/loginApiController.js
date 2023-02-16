@@ -70,10 +70,14 @@ const verifyEmailLink = (req, res) => __awaiter(void 0, void 0, void 0, function
     if (!vToken) {
         return res.status(404).json({ message: 'Invalid token' });
     }
+    vToken.used = true;
+    vToken.token = null;
+    yield vToken.save();
     let [user] = vToken.users;
     yield DB.logininfo.create({
         logindate: moment(),
-        userid: user.id
+        userid: user.id,
+        usersession: vToken.uuid
     });
     res.status(200).json({
         message: 'Email address verified successfully',
@@ -81,39 +85,17 @@ const verifyEmailLink = (req, res) => __awaiter(void 0, void 0, void 0, function
     });
 });
 const logOut = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const auth_token = req.header("auth-token");
-    // console.log(token)
-    const loginLink = yield DB.loginlink.findOne({
-        where: {
-            uuid: auth_token,
-            used: {
-                [DB.Sequelize.Op.eq]: false,
-            },
-        },
-        include: [
-            {
-                model: DB.user,
-                attributes: ['id', 'uuid', 'name', 'email'],
-            },
-        ],
-    });
-    if (!loginLink) {
-        return res.status(404).send({ message: 'Login link not found' });
-    }
-    loginLink.used = true;
-    loginLink.token = null;
-    yield loginLink.save();
-    let [user] = loginLink.users;
     yield DB.logininfo.update({
-        logoutdate: moment()
+        logoutdate: moment(),
+        usersession: null
     }, {
         where: {
-            userid: user.id
+            userid: req.userId,
+            uuid: req.logininfoUuid
         }
     });
     res.status(200).send({
-        message: 'Logout successful',
-        loginLink: loginLink
+        message: 'Logout successful'
     });
 });
 module.exports = {

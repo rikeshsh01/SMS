@@ -44,30 +44,6 @@ const authUserJWT = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         res.status(500).send("Internal Server Error");
     }
 });
-// authentication without jwt 
-const authUserNoJWT = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const { email, password } = req.body;
-        let userDB = yield User.findOne({ where: { email: email } });
-        // res.json(userDB)
-        if (!userDB) {
-            return res.status(400).json({ error: "User Doesnot exist" });
-        }
-        const passwordCOmpare = yield bcrypt.compare(password, userDB.password);
-        if (!passwordCOmpare) {
-            return res.status(400).json({ error: "Password doesnot matched" });
-        }
-        const logininfo = yield db.logininfo.create({
-            logindate: moment(),
-            userid: userDB.id
-        });
-        res.json(logininfo);
-    }
-    catch (error) {
-        console.log(error.message);
-        res.status(500).send("Internal Server Error");
-    }
-});
 module.exports = {
-    authUserJWT, authUserNoJWT
+    authUserJWT,
 };
