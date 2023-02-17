@@ -1,35 +1,36 @@
 const StudentApiController = require('../controller/studentApiController');
-var userMiddleware = require('../middleware/userMiddleware');
-var VerifyUser = userMiddleware.verifyUser;
+var middleware = require('../middleware/emailAuthMiddleware')
+var VerifyAuth = middleware.verifyAuthUser;
 
 var router = require("express").Router();
 
-// Create a new User
-router.post("/student",VerifyUser,  StudentApiController.createStudent); 
+// View all student list
+router.get('/student/',VerifyAuth, StudentApiController.getAllStudent)
 
-// Read all User 
-router.get('/student/',VerifyUser, StudentApiController.getAllStudent)
+// Create a Student 
+router.post('/student',VerifyAuth, StudentApiController.createStudent)
 
-// Update User
-router.put('/student/:id',VerifyUser,StudentApiController.updateStudent)
+// Update a Student 
+router.put('/student/:id', VerifyAuth,  StudentApiController.updateStudent)
 
-// Delete User
-router.delete('/student/:id',VerifyUser,StudentApiController.deleteStudent)
+// Delete a Student
+router.delete('/student/:id',VerifyAuth,StudentApiController.deleteStudent)
 
-// Read all User 
-router.get('/student/:id',VerifyUser, StudentApiController.getStudentById)
 
-router.get('/student/:id/result',VerifyUser, StudentApiController.getStudentReport)
+//Get Student detail by id
+router.get('/student/:id',VerifyAuth, StudentApiController.getStudentById)
 
-router.get('/filter/',VerifyUser, StudentApiController.sortSearchFilter)
 
-router.get('/student/:id/marks',VerifyUser, StudentApiController.getMarksFn)
+// // filter students record with page,perPage,search,orderBy, OrderDirection
+router.get('/filter/student/', StudentApiController.sortSearchFilter)
 
-router.post('/studentfn', StudentApiController.addStudentFn)
 
-router.put('/studentfn/:id', StudentApiController.updateStudentFn)
+// Student result 
+router.get('/student/:id/result',VerifyAuth, StudentApiController.getStudentResult)
 
-router.get('/mail/:id',VerifyUser,  StudentApiController.sendMail)
+
+// send result to the student email
+router.get('/mail/:id',VerifyAuth,  StudentApiController.sendMail)
 
 
 

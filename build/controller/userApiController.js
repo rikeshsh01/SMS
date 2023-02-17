@@ -44,7 +44,7 @@ const getAllUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         data: allUser
     });
 });
-// Update user data
+// Update users
 const updateUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const salt = yield bcrypt.genSalt(10);

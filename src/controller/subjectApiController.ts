@@ -16,7 +16,7 @@ const createSubject = async (req: any, res: Response) => {
         // console.log(subject)
         res.status(200).json({
             message: "Subject Created",
-            dataSubject: { Subject }
+            dataSubject: subject 
         })
 
     } catch (error: any) {
@@ -34,11 +34,10 @@ const getAllSubject = async (req: any, res: Response) => {
         msg: "List of all Subjects",
         data: allSubject
     })
-
 }
 
 
-// Update Subject data
+// Update Subject
 const updateSubject = async (req: any, res: Response) => {
     try {
         const { name, code } = req.body;
@@ -88,20 +87,16 @@ const deleteSubject = async (req: any, res: Response) => {
 }
 
 
-// get student subject db function
-const getStudentSub = async (studentId: number) => {
-    const substd = await db.sequelize.query(`SELECT * from public.get_student_data(:id)`, {
-        replacements: { id: studentId },
-        type: db.sequelize.QueryTypes.SELECT
-    });
-    return substd;
-}
-
-
+// get all subject belongs to a student 
 const getStudentSubject = async (req: any, res: Response) => {
     try {
         const studentId = req.params.id
-        const getSubjectStd = await getStudentSub(studentId);
+        console.log(studentId)
+        const getSubjectStd = await db.sequelize.query(`SELECT * from public.get_student_data(:id)`, {
+            replacements: { id: studentId },
+            type: db.sequelize.QueryTypes.SELECT
+        });
+        
 
         const transformedData = {
             id: getSubjectStd[0].id,

@@ -1,7 +1,6 @@
 import { Response, Request } from "express";
 var bcrypt = require('bcrypt');
 var jwt = require('jsonwebtoken');
-const moment = require('moment');
 const db = require('../models/index')
 let User = db.user;
 
@@ -44,9 +43,6 @@ const authUserJWT = async (req: any, res: Response) => {
 
     }
 }
-
-
-
 
 
 module.exports = {

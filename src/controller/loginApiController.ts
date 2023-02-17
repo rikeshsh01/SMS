@@ -2,58 +2,66 @@ const DB = require('../models/index');
 const moment = require('moment');
 const nodemailer = require("nodemailer");
 
-
+// send virfication token to email 
 const sendToEmail = async (req: any, res: any) => {
-    let email = req.body.email
-    const token = Math.random().toString(36).substring(2);
-
-
-    const user = await DB.user.findOne({
-        where: {
-            email: email
-        },
-        include: [DB.loginlink],
-    });
-
-    // res.json(user)
-
-
-    if (!user) {
-        res.json({
-            msg: "User does not exits"
+    try {
+        let email = req.body.email
+        const token = Math.random().toString(36).substring(2);
+    
+    
+        const user = await DB.user.findOne({
+            where: {
+                email: email
+            },
+            include: [DB.loginlink],
+        });
+    
+        // res.json(user)
+    
+    
+        if (!user) {
+            res.send({
+                msg: "User does not exits"
+            });
+        }else {
+            
+        const loginlink = await DB.loginlink.create({
+            token: token
         })
-    }
-    const loginlink = await DB.loginlink.create({
-        token: token
-    })
-
-    const userloginlink = await DB.userloginlink.create({
-        userid: user.id,
-        loginlinkid: loginlink.id
-    })
-
-
-    const transporter = nodemailer.createTransport({
-        host: 'smtp.ethereal.email',
-        port: 587,
-        auth: {
-            user: 'cullen79@ethereal.email',
-            pass: 'XCUhzqWZkBNuFpKP9t'
+    
+        const userloginlink = await DB.userloginlink.create({
+            userid: user.id,
+            loginlinkid: loginlink.id
+        })
+    
+    
+        const transporter = nodemailer.createTransport({
+            host: 'smtp.ethereal.email',
+            port: 587,
+            auth: {
+                user: 'cullen79@ethereal.email',
+                pass: 'XCUhzqWZkBNuFpKP9t'
+            }
+        });
+    
+        await transporter.sendMail({
+            from: "admin@gmail.com",
+            to: email,
+            subject: 'Verify Your Account',
+            text: `Please click on this link to verify : http://localhost:5000/api/login/emailauthentication/${token}`,
+        });
+        res.status(201).json({
+            user, loginlink, userloginlink
+        })
         }
-    });
-
-    await transporter.sendMail({
-        from: "admin@gmail.com",
-        to: email,
-        subject: 'Verify Your Account',
-        text: `Please click on this link to verify : http://localhost:5000/api/login/emailauthentication/${token}`,
-    });
-    res.status(201).json({
-        user, loginlink, userloginlink
-    })
+    } catch (error) {
+        res.send(error)
+    }
+   
 }
 
 
+// Authenticate email with the token send to email
 const verifyEmailLink = async (req: any, res: any) => {
 
     let token = req.params.token
@@ -95,6 +103,8 @@ const verifyEmailLink = async (req: any, res: any) => {
 
 }
 
+
+// Clear user session/ logout 
 const logOut = async (req: any, res: any) => {
     
     await DB.logininfo.update({

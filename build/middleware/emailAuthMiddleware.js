@@ -12,7 +12,7 @@ const dB = require('../models/index');
 const verifyAuthUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     // Get the user from jwt token and id to req object 
     const token = req.header("auth-token");
-    console.log(token);
+    // console.log(token)
     if (!token) {
         return res.status(401).json({ msg: 'You need to sign in first' });
     }
@@ -23,7 +23,7 @@ const verifyAuthUser = (req, res, next) => __awaiter(void 0, void 0, void 0, fun
             },
             include: [dB.user],
         });
-        console.log(loginInfo);
+        // console.log(loginInfo)
         req.userId = loginInfo.user.id;
         req.logininfoUuid = loginInfo.uuid;
         next();

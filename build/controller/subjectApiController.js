@@ -22,7 +22,7 @@ const createSubject = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         // console.log(subject)
         res.status(200).json({
             message: "Subject Created",
-            dataSubject: { Subject }
+            dataSubject: subject
         });
     }
     catch (error) {
@@ -38,7 +38,7 @@ const getAllSubject = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         data: allSubject
     });
 });
-// Update Subject data
+// Update Subject
 const updateSubject = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { name, code } = req.body;
@@ -80,18 +80,15 @@ const deleteSubject = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         res.status(500).send("Internal Server Error");
     }
 });
-// get student subject db function
-const getStudentSub = (studentId) => __awaiter(void 0, void 0, void 0, function* () {
-    const substd = yield db.sequelize.query(`SELECT * from public.get_student_data(:id)`, {
-        replacements: { id: studentId },
-        type: db.sequelize.QueryTypes.SELECT
-    });
-    return substd;
-});
+// get all subject belongs to a student 
 const getStudentSubject = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const studentId = req.params.id;
-        const getSubjectStd = yield getStudentSub(studentId);
+        console.log(studentId);
+        const getSubjectStd = yield db.sequelize.query(`SELECT * from public.get_student_data(:id)`, {
+            replacements: { id: studentId },
+            type: db.sequelize.QueryTypes.SELECT
+        });
         const transformedData = {
             id: getSubjectStd[0].id,
             name: getSubjectStd[0].name,

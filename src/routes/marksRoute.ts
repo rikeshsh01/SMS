@@ -1,13 +1,12 @@
 const MarksApiController = require('../controller/marksApiController');
-var userMiddleware = require('../middleware/userMiddleware');
-var VerifyUser = userMiddleware.verifyUser;
-
+var middleware = require('../middleware/emailAuthMiddleware')
+var VerifyAuth = middleware.verifyAuthUser;
 var router = require("express").Router();
 
-// Create a Marks
-router.post("/students/:id/:subject",VerifyUser,  MarksApiController.createMark); 
+// Create a Marks of a student in a subject
+router.post("/marks/student/:id/:subject",VerifyAuth,  MarksApiController.createMark); 
 
-// // Update Marks
-router.put('/students/:id/subject', VerifyUser,MarksApiController.updateMark);
+// // Update Marks of a student in a subject
+router.put('/marks/student/:id/subject', VerifyAuth,MarksApiController.updateMark);
 
 module.exports = router 

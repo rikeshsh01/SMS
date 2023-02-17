@@ -1,21 +1,23 @@
 const SubjectApiController = require('../controller/subjectApiController');
-var userMiddleware = require('../middleware/userMiddleware');
-var VerifyUser = userMiddleware.verifyUser;
+var middleware = require('../middleware/emailAuthMiddleware')
+var VerifyAuth = middleware.verifyAuthUser;
 
 var router = require("express").Router();
 
-// Create a new User
-router.post("/subject",VerifyUser,  SubjectApiController.createSubject); 
+// Create a new Subject
+router.post("/subject",VerifyAuth,  SubjectApiController.createSubject); 
 
-// Read all User 
-router.get('/subject/',VerifyUser, SubjectApiController.getAllSubject)
+// View all available subject
+router.get('/subject/',VerifyAuth, SubjectApiController.getAllSubject)
 
-// Update User
-router.put('/subject/:id',SubjectApiController.updateSubject)
+// Update Subject
+router.put('/subject/:id',VerifyAuth,SubjectApiController.updateSubject)
 
-// Delete User
-router.delete('/subject/:id',VerifyUser,SubjectApiController.deleteSubject)
+// Delete Subject
+router.delete('/subject/:id',VerifyAuth,SubjectApiController.deleteSubject)
 
-router.get('/subject/student/:id',VerifyUser, SubjectApiController.getStudentSubject)
+
+// get all subject belongs to a student 
+router.get('/subject/student/:id',VerifyAuth, SubjectApiController.getStudentSubject)
 
 module.exports = router 

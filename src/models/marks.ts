@@ -5,10 +5,6 @@ module.exports = (DataTypes: any, sequelize: any) => {
             primaryKey: true,
             autoIncrement: true
         },
-        uuid: {
-            type: DataTypes.UUID,
-            defaultValue: DataTypes.UUIDV4,
-        },
         marks: {
             type: DataTypes.INTEGER,
             allowNull: false

@@ -1,13 +1,11 @@
-const authUserApiController = require('../controller/authUserApiController');
-var userMiddleware = require('../middleware/userMiddleware')
-var VerifyUser = userMiddleware.verifyUser;
+const authUserApiController = require('../controller/authUserApiController')
 
 
 
 var router = require("express").Router();
 
 // Auth User with jwt
-router.post('/login/jwt',authUserApiController.authUserJWT)
+router.post('auth/login/jwt',authUserApiController.authUserJWT)
 
 
 module.exports = router 

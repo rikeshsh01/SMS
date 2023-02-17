@@ -4,29 +4,6 @@ const nodemailer = require("nodemailer");
 const db = require('../models/index')
 let Student = db.student;
 
-// Create a new Student
-const createStudent = async (req: any, res: Response) => {
-    try {
-
-        const { name, email, phone, address } = req.body;
-
-        const student = await Student.create({
-            email: email,
-            phone: phone,
-            address: address,
-            name: name
-        });
-        res.status(200).json({
-            message: "Student Created",
-            dataStudent: { student }
-        })
-
-    } catch (error: any) {
-        console.log(error.message);
-        res.status(500).send("Internal Server Error");
-    }
-}
-
 
 // View all created Students 
 const getAllStudent = async (req: any, res: Response) => {
@@ -36,39 +13,6 @@ const getAllStudent = async (req: any, res: Response) => {
         msg: "List of all Students",
         data: allStudent
     })
-
-}
-
-
-// Update Student data
-const updateStudent = async (req: any, res: Response) => {
-    try {
-        const { name, email, phone, address } = req.body;
-
-        const StudentId = req.params.id
-        await Student.update({
-            email: email,
-            phone: phone,
-            address: address,
-            name: name
-        }, {
-            where: {
-                id: StudentId
-            }
-        });
-
-        res.status(200).json({
-            msg: "Updated",
-            id: StudentId
-        })
-
-        // }
-
-    } catch (error: any) {
-        console.log(error.message);
-        res.status(500).send("Internal Server Error");
-
-    }
 
 }
 
@@ -87,9 +31,6 @@ const deleteStudent = async (req: any, res: Response) => {
             id: StudentId
         })
 
-
-
-        // }
     } catch (error: any) {
         console.log(error.message);
         res.status(500).send("Internal Server Error");
@@ -97,8 +38,9 @@ const deleteStudent = async (req: any, res: Response) => {
     }
 }
 
+// view student by id 
 const getStudentById = async (req: any, res: Response) => {
-    console.log(req.params.id)
+    // console.log(req.params.id)
 
     const studentDetails = await db.student.findByPk(req.params.id, {
         include: [{
@@ -127,48 +69,10 @@ const getStudentById = async (req: any, res: Response) => {
         }))
     };
 
-    //   console.log(transformedData);
-
     res.json(transformedData);
 }
 
-const getStudentReport = async (req: any, res: Response) => {
-
-    console.log(req.params.id)
-
-    const studentDetails = await db.student.findByPk(req.params.id, {
-        include: [{
-            model: db.mark,
-            as: 'subjects',
-            include: [{
-                model: db.subject
-            }]
-        }]
-    });
-
-    const { subjects } = studentDetails;
-    const results = subjects.map((item: { subject: any, marks: any }) => ({
-        subject: item.subject.name,
-        marks: item.marks
-    }))
-    res.json(results)
-    //   res.json(subjects)
-}
-
-
-
-// db function 
-
-const getStudentMarksDbFn = async (pageNumber: number, pageLimit: number, searchString: string, orderBy: string, orderDirection: string) => {
-
-    const studs = await db.sequelize.query(`SELECT * from public.get_all_students(:page_number, :page_limit, :search_string, :order_by, :order_direction)`, {
-        replacements: { page_number: pageNumber, page_limit: pageLimit, search_string: searchString, order_by: orderBy, order_direction: orderDirection },
-        type: db.sequelize.QueryTypes.SELECT
-    });
-    console.log(studs)
-    return studs;
-}
-
+// filter students with page,perPage,search,orderBy, OrderDirection 
 
 const sortSearchFilter = async (req: any, res: Response) => {
     try {
@@ -184,7 +88,10 @@ const sortSearchFilter = async (req: any, res: Response) => {
         console.log(order_by, "order_by")
         console.log(order_direction, "order_direction")
 
-        const sortFilter = await getStudentMarksDbFn(page, perPage, search_string, order_by, order_direction);
+        const sortFilter = await db.sequelize.query(`SELECT * from public.get_all_students(:page_number, :page_limit, :search_string, :order_by, :order_direction)`, {
+            replacements: { page_number: page, page_limit: perPage, search_string: search_string, order_by: order_by, order_direction: order_direction },
+            type: db.sequelize.QueryTypes.SELECT
+        });
 
         res.status(200).json(sortFilter)
 
@@ -192,49 +99,38 @@ const sortSearchFilter = async (req: any, res: Response) => {
         res.status(501).send({ error: "Internal Server ERROR" })
     }
 }
-
-const addStudentDbFn = async (s_name: string, s_email: string, s_phone: string, s_address: string) => {
-    const stud = await db.sequelize.query(`select * from add_student(:p_name,:p_email,:p_phone,:p_address)`, {
-        replacements: { p_name: s_name, p_email: s_email, p_phone: s_phone, p_address: s_address },
-        type: db.sequelize.QueryTypes.SELECT
-    });
-    // console.log(s_name)
-    return stud;
-}
-
-const addStudentFn = async (req: any, res: Response) => {
+  
+// Create new Student 
+const createStudent = async (req: any, res: Response) => {
     const { name, email, phone, address } = req.body;
 
-    const addStud = await addStudentDbFn(name, email, phone, address);
-    console.log(addStud)
+    const addStud = await db.sequelize.query(`select * from add_student(:p_name,:p_email,:p_phone,:p_address)`, {
+        replacements: { p_name: name, p_email: email, p_phone: phone, p_address: address },
+        type: db.sequelize.QueryTypes.SELECT
+    });
+    // console.log(addStud)
     res.json(addStud)
 }
 
-const updateStudentDbFn = async (s_id: number, s_name: string, s_email: string, s_phone: string, s_address: string) => {
-    const stud = await db.sequelize.query(`select * from update_student(:p_id,:p_name,:p_email,:p_phone,:p_address)`, {
-        replacements: { p_id: s_id, p_name: s_name, p_email: s_email, p_phone: s_phone, p_address: s_address },
-        type: db.sequelize.QueryTypes.SELECT
-    });
-    console.log(s_name)
-    return stud;
-}
 
-
-const updateStudentFn = async (req: any, res: Response) => {
+// Update existing student
+const updateStudent = async (req: any, res: Response) => {
     let id = req.params.id;
     const { name, email, phone, address } = req.body;
 
-    const updateStud = await updateStudentDbFn(id, name, email, phone, address);
-    console.log(updateStud)
+    const updateStud = await db.sequelize.query(`select * from update_student(:p_id,:p_name,:p_email,:p_phone,:p_address)`, {
+        replacements: { p_id: id, p_name: name, p_email: email, p_phone: phone, p_address: address },
+        type: db.sequelize.QueryTypes.SELECT
+    });
+    // console.log(updateStud)
     res.json(updateStud)
 }
 
 
 
 
-// result of student 
-
-const getResult = async (studId: number) => {
+// result of a student 
+const getResultfn = async (studId: number) => {
     const marks = await db.sequelize.query(`SELECT * from public.get_student_marks(:id)`, {
         replacements: { id: studId },
         type: db.sequelize.QueryTypes.SELECT
@@ -255,10 +151,10 @@ const getResult = async (studId: number) => {
     return studentResult;
 }
 
-const getMarksFn = async (req: any, res: Response) => {
+const getStudentResult = async (req: any, res: Response) => {
     try {
         const stud_id = req.params.id;
-        const getSubjectMarks = await getResult(stud_id);
+        const getSubjectMarks = await getResultfn(stud_id);
         // console.log(getSubjectMarks)
 
         // console.log(studentResult)
@@ -276,7 +172,7 @@ const getMarksFn = async (req: any, res: Response) => {
 const sendMail = async (req: any, res: any) => {
 
     let student_id = req.params.id;
-    let authUserId = req.authUserId;
+    let authUserId = req.userId;
 
     let userDetail = await db.user.findByPk(authUserId);
     // console.log(userDetail)
@@ -284,7 +180,7 @@ const sendMail = async (req: any, res: any) => {
     let studentDetail = await db.student.findByPk(student_id);
     // console.log(studentDetail)
 
-    const getSubjectMarks = await getResult(student_id);
+    const getSubjectMarks = await getResultfn(student_id);
 
     console.log(getSubjectMarks)
     // connect with smpt 
@@ -292,8 +188,8 @@ const sendMail = async (req: any, res: any) => {
         host: 'smtp.ethereal.email',
         port: 587,
         auth: {
-            user: 'serenity.donnelly43@ethereal.email',
-            pass: 'NG5JvCbDaUa4jSYuUN'
+            user: 'cullen79@ethereal.email',
+            pass: 'XCUhzqWZkBNuFpKP9t'
         }
     });
 
@@ -318,5 +214,5 @@ const sendMail = async (req: any, res: any) => {
 
 
 module.exports = {
-    createStudent, getAllStudent, updateStudent, deleteStudent, getStudentById, getStudentReport, sortSearchFilter, getMarksFn, addStudentFn, updateStudentFn, sendMail
+ getAllStudent, updateStudent, deleteStudent, getStudentById, sortSearchFilter, getStudentResult, createStudent, sendMail
 }

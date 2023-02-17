@@ -48,7 +48,7 @@ const getAllUser = async (req: any, res: Response) => {
 }
 
 
-// Update user data
+// Update users
 const updateUser = async (req: any, res: Response) => {
     try {
         const salt = await bcrypt.genSalt(10);

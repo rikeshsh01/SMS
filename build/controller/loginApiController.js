@@ -11,46 +11,55 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 const DB = require('../models/index');
 const moment = require('moment');
 const nodemailer = require("nodemailer");
+// send virfication token to email 
 const sendToEmail = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    let email = req.body.email;
-    const token = Math.random().toString(36).substring(2);
-    const user = yield DB.user.findOne({
-        where: {
-            email: email
-        },
-        include: [DB.loginlink],
-    });
-    // res.json(user)
-    if (!user) {
-        res.json({
-            msg: "User does not exits"
+    try {
+        let email = req.body.email;
+        const token = Math.random().toString(36).substring(2);
+        const user = yield DB.user.findOne({
+            where: {
+                email: email
+            },
+            include: [DB.loginlink],
         });
-    }
-    const loginlink = yield DB.loginlink.create({
-        token: token
-    });
-    const userloginlink = yield DB.userloginlink.create({
-        userid: user.id,
-        loginlinkid: loginlink.id
-    });
-    const transporter = nodemailer.createTransport({
-        host: 'smtp.ethereal.email',
-        port: 587,
-        auth: {
-            user: 'cullen79@ethereal.email',
-            pass: 'XCUhzqWZkBNuFpKP9t'
+        // res.json(user)
+        if (!user) {
+            res.send({
+                msg: "User does not exits"
+            });
         }
-    });
-    yield transporter.sendMail({
-        from: "admin@gmail.com",
-        to: email,
-        subject: 'Verify Your Account',
-        text: `Please click on this link to verify : http://localhost:5000/api/login/emailauthentication/${token}`,
-    });
-    res.status(201).json({
-        user, loginlink, userloginlink
-    });
+        else {
+            const loginlink = yield DB.loginlink.create({
+                token: token
+            });
+            const userloginlink = yield DB.userloginlink.create({
+                userid: user.id,
+                loginlinkid: loginlink.id
+            });
+            const transporter = nodemailer.createTransport({
+                host: 'smtp.ethereal.email',
+                port: 587,
+                auth: {
+                    user: 'cullen79@ethereal.email',
+                    pass: 'XCUhzqWZkBNuFpKP9t'
+                }
+            });
+            yield transporter.sendMail({
+                from: "admin@gmail.com",
+                to: email,
+                subject: 'Verify Your Account',
+                text: `Please click on this link to verify : http://localhost:5000/api/login/emailauthentication/${token}`,
+            });
+            res.status(201).json({
+                user, loginlink, userloginlink
+            });
+        }
+    }
+    catch (error) {
+        res.send(error);
+    }
 });
+// Authenticate email with the token send to email
 const verifyEmailLink = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     let token = req.params.token;
     const vToken = yield DB.loginlink.findOne({
@@ -84,6 +93,7 @@ const verifyEmailLink = (req, res) => __awaiter(void 0, void 0, void 0, function
         authToken: vToken.uuid,
     });
 });
+// Clear user session/ logout 
 const logOut = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     yield DB.logininfo.update({
         logoutdate: moment(),

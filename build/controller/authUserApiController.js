@@ -11,7 +11,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 var bcrypt = require('bcrypt');
 var jwt = require('jsonwebtoken');
-const moment = require('moment');
 const db = require('../models/index');
 let User = db.user;
 var privateKey = "MynameisRicky";

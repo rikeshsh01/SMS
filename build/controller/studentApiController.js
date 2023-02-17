@@ -12,26 +12,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const nodemailer = require("nodemailer");
 const db = require('../models/index');
 let Student = db.student;
-// Create a new Student
-const createStudent = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const { name, email, phone, address } = req.body;
-        const student = yield Student.create({
-            email: email,
-            phone: phone,
-            address: address,
-            name: name
-        });
-        res.status(200).json({
-            message: "Student Created",
-            dataStudent: { student }
-        });
-    }
-    catch (error) {
-        console.log(error.message);
-        res.status(500).send("Internal Server Error");
-    }
-});
 // View all created Students 
 const getAllStudent = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const allStudent = yield Student.findAll();
@@ -39,32 +19,6 @@ const getAllStudent = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         msg: "List of all Students",
         data: allStudent
     });
-});
-// Update Student data
-const updateStudent = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const { name, email, phone, address } = req.body;
-        const StudentId = req.params.id;
-        yield Student.update({
-            email: email,
-            phone: phone,
-            address: address,
-            name: name
-        }, {
-            where: {
-                id: StudentId
-            }
-        });
-        res.status(200).json({
-            msg: "Updated",
-            id: StudentId
-        });
-        // }
-    }
-    catch (error) {
-        console.log(error.message);
-        res.status(500).send("Internal Server Error");
-    }
 });
 // Delete Student
 const deleteStudent = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -79,15 +33,15 @@ const deleteStudent = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             msg: "Deleted",
             id: StudentId
         });
-        // }
     }
     catch (error) {
         console.log(error.message);
         res.status(500).send("Internal Server Error");
     }
 });
+// view student by id 
 const getStudentById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log(req.params.id);
+    // console.log(req.params.id)
     const studentDetails = yield db.student.findByPk(req.params.id, {
         include: [{
                 model: db.mark,
@@ -112,37 +66,9 @@ const getStudentById = (req, res) => __awaiter(void 0, void 0, void 0, function*
             code: item.subject.code
         }))
     };
-    //   console.log(transformedData);
     res.json(transformedData);
 });
-const getStudentReport = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log(req.params.id);
-    const studentDetails = yield db.student.findByPk(req.params.id, {
-        include: [{
-                model: db.mark,
-                as: 'subjects',
-                include: [{
-                        model: db.subject
-                    }]
-            }]
-    });
-    const { subjects } = studentDetails;
-    const results = subjects.map((item) => ({
-        subject: item.subject.name,
-        marks: item.marks
-    }));
-    res.json(results);
-    //   res.json(subjects)
-});
-// db function 
-const getStudentMarksDbFn = (pageNumber, pageLimit, searchString, orderBy, orderDirection) => __awaiter(void 0, void 0, void 0, function* () {
-    const studs = yield db.sequelize.query(`SELECT * from public.get_all_students(:page_number, :page_limit, :search_string, :order_by, :order_direction)`, {
-        replacements: { page_number: pageNumber, page_limit: pageLimit, search_string: searchString, order_by: orderBy, order_direction: orderDirection },
-        type: db.sequelize.QueryTypes.SELECT
-    });
-    console.log(studs);
-    return studs;
-});
+// filter students with page,perPage,search,orderBy, OrderDirection 
 const sortSearchFilter = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         // console.log("Hello")
@@ -156,44 +82,39 @@ const sortSearchFilter = (req, res) => __awaiter(void 0, void 0, void 0, functio
         console.log(search_string, "search_string");
         console.log(order_by, "order_by");
         console.log(order_direction, "order_direction");
-        const sortFilter = yield getStudentMarksDbFn(page, perPage, search_string, order_by, order_direction);
+        const sortFilter = yield db.sequelize.query(`SELECT * from public.get_all_students(:page_number, :page_limit, :search_string, :order_by, :order_direction)`, {
+            replacements: { page_number: page, page_limit: perPage, search_string: search_string, order_by: order_by, order_direction: order_direction },
+            type: db.sequelize.QueryTypes.SELECT
+        });
         res.status(200).json(sortFilter);
     }
     catch (error) {
         res.status(501).send({ error: "Internal Server ERROR" });
     }
 });
-const addStudentDbFn = (s_name, s_email, s_phone, s_address) => __awaiter(void 0, void 0, void 0, function* () {
-    const stud = yield db.sequelize.query(`select * from add_student(:p_name,:p_email,:p_phone,:p_address)`, {
-        replacements: { p_name: s_name, p_email: s_email, p_phone: s_phone, p_address: s_address },
+// Create new Student 
+const createStudent = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { name, email, phone, address } = req.body;
+    const addStud = yield db.sequelize.query(`select * from add_student(:p_name,:p_email,:p_phone,:p_address)`, {
+        replacements: { p_name: name, p_email: email, p_phone: phone, p_address: address },
         type: db.sequelize.QueryTypes.SELECT
     });
-    // console.log(s_name)
-    return stud;
-});
-const addStudentFn = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { name, email, phone, address } = req.body;
-    const addStud = yield addStudentDbFn(name, email, phone, address);
-    console.log(addStud);
+    // console.log(addStud)
     res.json(addStud);
 });
-const updateStudentDbFn = (s_id, s_name, s_email, s_phone, s_address) => __awaiter(void 0, void 0, void 0, function* () {
-    const stud = yield db.sequelize.query(`select * from update_student(:p_id,:p_name,:p_email,:p_phone,:p_address)`, {
-        replacements: { p_id: s_id, p_name: s_name, p_email: s_email, p_phone: s_phone, p_address: s_address },
-        type: db.sequelize.QueryTypes.SELECT
-    });
-    console.log(s_name);
-    return stud;
-});
-const updateStudentFn = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+// Update existing student
+const updateStudent = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     let id = req.params.id;
     const { name, email, phone, address } = req.body;
-    const updateStud = yield updateStudentDbFn(id, name, email, phone, address);
-    console.log(updateStud);
+    const updateStud = yield db.sequelize.query(`select * from update_student(:p_id,:p_name,:p_email,:p_phone,:p_address)`, {
+        replacements: { p_id: id, p_name: name, p_email: email, p_phone: phone, p_address: address },
+        type: db.sequelize.QueryTypes.SELECT
+    });
+    // console.log(updateStud)
     res.json(updateStud);
 });
-// result of student 
-const getResult = (studId) => __awaiter(void 0, void 0, void 0, function* () {
+// result of a student 
+const getResultfn = (studId) => __awaiter(void 0, void 0, void 0, function* () {
     const marks = yield db.sequelize.query(`SELECT * from public.get_student_marks(:id)`, {
         replacements: { id: studId },
         type: db.sequelize.QueryTypes.SELECT
@@ -206,10 +127,10 @@ const getResult = (studId) => __awaiter(void 0, void 0, void 0, function* () {
     });
     return studentResult;
 });
-const getMarksFn = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getStudentResult = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const stud_id = req.params.id;
-        const getSubjectMarks = yield getResult(stud_id);
+        const getSubjectMarks = yield getResultfn(stud_id);
         // console.log(getSubjectMarks)
         // console.log(studentResult)
         res.status(200).json(getSubjectMarks);
@@ -221,20 +142,20 @@ const getMarksFn = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
 // sending mail to the student by logged in user
 const sendMail = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     let student_id = req.params.id;
-    let authUserId = req.authUserId;
+    let authUserId = req.userId;
     let userDetail = yield db.user.findByPk(authUserId);
     // console.log(userDetail)
     let studentDetail = yield db.student.findByPk(student_id);
     // console.log(studentDetail)
-    const getSubjectMarks = yield getResult(student_id);
+    const getSubjectMarks = yield getResultfn(student_id);
     console.log(getSubjectMarks);
     // connect with smpt 
     const transporter = nodemailer.createTransport({
         host: 'smtp.ethereal.email',
         port: 587,
         auth: {
-            user: 'serenity.donnelly43@ethereal.email',
-            pass: 'NG5JvCbDaUa4jSYuUN'
+            user: 'cullen79@ethereal.email',
+            pass: 'XCUhzqWZkBNuFpKP9t'
         }
     });
     // send mail with defined transport object
@@ -252,5 +173,5 @@ const sendMail = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     });
 });
 module.exports = {
-    createStudent, getAllStudent, updateStudent, deleteStudent, getStudentById, getStudentReport, sortSearchFilter, getMarksFn, addStudentFn, updateStudentFn, sendMail
+    getAllStudent, updateStudent, deleteStudent, getStudentById, sortSearchFilter, getStudentResult, createStudent, sendMail
 };
